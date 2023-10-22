@@ -5,8 +5,9 @@ const app = express();
 app.use(cors());
 
 const balances = {
-  'WellHeartz': { principal: 10115, startDate: new Date('2023-06-21') },
-  'Brian K. Gaddie': { principal: 2169.35, startDate: new Date('2023-06-21') }
+  'WellHeartz': { principal: 10000, startDate: new Date('2023-06-21') },
+  'Brian K. Gaddie': { principal: 2054.35, startDate: new Date('2023-06-21') },
+  'Court Fees': { principal: 115, startDate: new Date('2023-06-21') }
 };
 
 const interestRate = 0.08;

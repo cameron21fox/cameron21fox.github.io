@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interest Tracker for Case 07C01-2302-SC-000002</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4; /* Light Grey */
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2 {
+            color: #990000; /* Maroon */
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #990000; /* Maroon */
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        button:hover {
+            background-color: #780000; /* Darker Maroon */
+        }
+
+        .case-details {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Interest Tracker</h1>
+        <div class="case-details">
+            <h2>Case Number: 07C01-2302-SC-000002</h2>
+            <p><strong>Cameron Fox</strong>, Plaintiff,</p>
+            <p>v.</p>
+            <p><strong>Brian Gaddie & WellHeartz, Inc.</strong>, Defendants.</p>
+        </div>
+        <div id="displayArea"></div>
+        <button onclick="downloadSpreadsheet()">Download Historical Data</button>
+        <p>Date of Download: <span id="downloadDate"></span></p>
+    </div>
+
+    <script>
+        const config = {
+            balances: {
+                "WellHeartz": { principal: 10115, interestAccrued: 0 },
+                "Brian K. Gaddie": { principal: 2169.35, interestAccrued: 0 },
+            },
+            startDate: "2023-06-21",
+            interestRate: 0.08
+        };
+
+        function calculateDailyInterest(principal) {
+            return (principal * config.interestRate) / 365;
+        }
+
+        function generateHistoricalData() {
+            const historicalData = [];
+            const currentDate = new Date();
+            currentDate.setHours(0, 0, 0, 0); // midnight of current day
+            let startDate = new Date(config.startDate);
+            const accumulativeBalances = JSON.parse(JSON.stringify(config.balances));
+
+            while (startDate <= currentDate) {
+                for (const name in accumulativeBalances) {
+                    const interestForTheDay = calculateDailyInterest(accumulativeBalances[name].principal + accumulativeBalances[name].interestAccrued);
+                    accumulativeBalances[name].interestAccrued += interestForTheDay;
+
+                    historicalData.push({
+                        date: startDate.toISOString().split('T')[0],
+                        name,
+                        principal: accumulativeBalances[name].principal,
+                        interest: accumulativeBalances[name].interestAccrued,
+                        total: accumulativeBalances[name].principal + accumulativeBalances[name].interestAccrued
+                    });
+                }
+                startDate.setDate(startDate.getDate() + 1);
+            }
+
+            return historicalData;
+        }
+
+        function updateDisplay() {
+            const displayArea = document.getElementById("displayArea");
+            const historicalData = generateHistoricalData();
+            const latestData = historicalData.filter(data => data.date === historicalData[historicalData.length - 1].date);
+
+            displayArea.innerHTML = '';
+            for (const data of latestData) {
+                const div = document.createElement('div');
+                div.innerHTML = `<strong>${data.name}</strong>: $${data.total.toFixed(2)} (Principal: $${data.principal.toFixed(2)}, Accumulated Interest: $${data.interest.toFixed(2)})`;
+                displayArea.appendChild(div);
+            }
+            
+            // Update the date of download
+            const downloadDateElem = document.getElementById("downloadDate");
+            downloadDateElem.textContent = new Date().toLocaleDateString();
+        }
+
+        function downloadSpreadsheet() {
+            const historicalData = generateHistoricalData();
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Date,Name,Principal,Interest,Total\n";
+
+            historicalData.forEach(entry => {
+                csvContent += `${entry.date},${entry.name},${entry.principal.toFixed(2)},${entry.interest.toFixed(2)},${entry.total.toFixed(2)}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "historical_interest_data.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>

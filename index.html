@@ -106,7 +106,7 @@
             displayArea.innerHTML = '';
             for (const data of latestData) {
                 const div = document.createElement('div');
-                div.innerHTML = `<strong>${data.name}</strong>: $${data.total.toFixed(2)} (Principal: $${data.principal.toFixed(2)}, Accumulated Interest: $${data.interest.toFixed(2)})`;
+                div.innerHTML = `<strong>${data.name}</strong>: $${data.total.toFixed(2)} (Principal: $${data.principal.toFixed(2)}, Interest: $${data.interest.toFixed(2)})`;
                 displayArea.appendChild(div);
             }
             

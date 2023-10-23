@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = url;
-        a.download = 'historical_interest_data.csv';
+        a.download = '07C01-2302-SC-2_Interest_Data.csv';
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);

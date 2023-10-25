@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Admin Panel</h1>
+        <form id="balanceForm">
+            <div class="form-group">
+                <label for="party">Select Party:</label>
+                <select id="party" name="party" required>
+                    <option value="WellHeartz">WellHeartz</option>
+                    <option value="Brian K. Gaddie">Brian K. Gaddie</option>
+                    <option value="Court Fees">Court Fees</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="paymentAmount">Payment Amount:</label>
+                <input type="number" id="paymentAmount" name="paymentAmount" required>
+            </div>
+            <div class="form-group">
+                <label for="paymentDate">Payment Date:</label>
+                <input type="date" id="paymentDate" name="paymentDate" required>
+            </div>
+            <button type="submit">Apply Payment</button>
+
+            <div class="admin-button-container">
+                <button type="button" id="resetButton" class="half-width-button" >Reset to Default</button>
+                <button onclick="goBackToIndex()" class="half-width-button" >Return to Home</button>
+            </div>
+            
+        </form>
+    </div>
+    <script src="admin-script.js"></script>
+    <script>
+        function goBackToIndex() {
+            window.location.href = 'index.html';
+        }
+        </script>        
+</body>
+</html>

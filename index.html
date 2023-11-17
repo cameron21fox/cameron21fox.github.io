@@ -96,35 +96,80 @@
         }
 
         function generateHistoricalData(years = 3) {
-            const historicalData = [];
-            const endDate = new Date(config.startDate);
-            endDate.setFullYear(endDate.getFullYear() + years);
-            let startDate = new Date(config.startDate);
-            const accumulativeBalances = JSON.parse(JSON.stringify(config.balances));
+    const historicalData = [];
+    const endDate = new Date(config.startDate);
+    endDate.setFullYear(endDate.getFullYear() + years);
+    let currentDate = new Date(config.startDate);
+    const accumulativeBalances = JSON.parse(JSON.stringify(config.balances));
 
-            while (startDate <= endDate) {
-                for (const name in accumulativeBalances) {
-                    const interestForTheDay = calculateDailyInterest(accumulativeBalances[name].principal + accumulativeBalances[name].interestAccrued);
-                    accumulativeBalances[name].interestAccrued += interestForTheDay;
+    // Load payments and sort them by date
+    const payments = JSON.parse(localStorage.getItem('payments')) || [];
+    payments.sort((a, b) => new Date(a.paymentDate) - new Date(b.paymentDate));
 
-                    historicalData.push({
-                        date: startDate.toISOString().split('T')[0],
-                        name,
-                        principal: accumulativeBalances[name].principal,
-                        interest: accumulativeBalances[name].interestAccrued,
-                        total: accumulativeBalances[name].principal + accumulativeBalances[name].interestAccrued
-                    });
+    let paymentIndex = 0;
+
+    while (currentDate <= endDate) {
+        // Apply payments for the current day
+        while (paymentIndex < payments.length && new Date(payments[paymentIndex].paymentDate) <= currentDate) {
+            const payment = payments[paymentIndex];
+            if (accumulativeBalances[payment.party]) {
+                let paymentAmount = parseFloat(payment.paymentAmount);
+                let balance = accumulativeBalances[payment.party];
+
+                // First, deduct from interest accrued
+                if (balance.interestAccrued > 0) {
+                    if (balance.interestAccrued >= paymentAmount) {
+                        balance.interestAccrued -= paymentAmount;
+                        paymentAmount = 0;
+                    } else {
+                        paymentAmount -= balance.interestAccrued;
+                        balance.interestAccrued = 0;
+                    }
                 }
-                startDate.setDate(startDate.getDate() + 1);
-            }
 
-            return historicalData;
+                // Then, deduct any remaining payment from the principal
+                if (paymentAmount > 0) {
+                    balance.principal = Math.max(balance.principal - paymentAmount, 0);
+                }
+            }
+            paymentIndex++;
         }
+
+        // Calculate interest for the day
+        for (const name in accumulativeBalances) {
+            const balance = accumulativeBalances[name];
+            const interestForTheDay = calculateDailyInterest(balance.principal + balance.interestAccrued);
+            balance.interestAccrued += interestForTheDay;
+
+            historicalData.push({
+                date: currentDate.toISOString().split('T')[0],
+                name,
+                principal: balance.principal,
+                interest: balance.interestAccrued,
+                total: balance.principal + balance.interestAccrued
+            });
+        }
+        currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return historicalData;
+}
+
+
 
         function updateDisplay() {
     const currentDate = new Date();
     currentDate.setHours(0, 0, 0, 0); // Set to midnight for accurate comparison
-    const historicalData = generateHistoricalData().filter(data => new Date(data.date) <= currentDate);
+    let historicalData = generateHistoricalData().filter(data => new Date(data.date) <= currentDate);
+
+    // Load payments and adjust principal amounts
+    const payments = JSON.parse(localStorage.getItem('payments')) || [];
+    payments.forEach(payment => {
+        if (config.balances[payment.party]) {
+            config.balances[payment.party].principal -= parseFloat(payment.paymentAmount);
+        }
+    });
+
     const latestData = historicalData.filter(data => data.date === historicalData[historicalData.length - 1].date);
 
     const displayArea = document.getElementById("displayArea");
@@ -255,6 +300,7 @@
         });
     }
 }
+
 
         function getRandomColor(opacity = 1) {
             const letters = '0123456789ABCDEF';
